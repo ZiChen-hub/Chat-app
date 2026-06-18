@@ -1,2 +1,2 @@
-# chat-app
+# Chat-app
 A lightweight chat app.
