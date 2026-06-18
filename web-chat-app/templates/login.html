@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChatApp - Login</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <i class="fas fa-comments"></i>
+                <h1>ChatApp</h1>
+                <p class="tagline">Connect instantly, chat seamlessly</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Username" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="button" class="toggle-password" id="togglePassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="options">
+                    <label class="remember">
+                        <input type="checkbox" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="forgot" id="forgotPassword">Forgot password?</a>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                <button type="button" class="register-btn" onclick="window.location.href='/register'">
+                    <i class="fas fa-user-plus"></i> Create New Account
+                </button>
+            </form>
+            
+            
+            <div class="footer">
+                <p>By signing in, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></p>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-bolt"></i>
+                <h3>Real-time Chat</h3>
+                <p>Messages delivered instantly with read receipts</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-mobile-alt"></i>
+                <h3>Responsive Design</h3>
+                <p>Works perfectly on all devices</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Secure & Private</h3>
+                <p>End-to-end encryption for your conversations</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/login.js"></script>
+</body>
+</html>

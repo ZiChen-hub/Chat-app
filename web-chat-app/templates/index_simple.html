@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChatApp</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 简化版样式 */
+        .simple-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .simple-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .name-circle-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 24px;
+        }
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .contact-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .contact-card:hover {
+            transform: translateY(-5px);
+        }
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+        }
+        .message.sent {
+            margin-left: auto;
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border-bottom-right-radius: 5px;
+        }
+        .message.received {
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+        }
+        .message-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .message-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+        .message-input button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            .contacts-grid {
+                grid-template-columns: 1fr;
+            }
+            .simple-container {
+                padding: 10px;
+            }
+            .contact-card {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simple-container">
+        <!-- 联系人列表视图 -->
+        <div id="contactsView">
+            <div class="simple-header">
+                <div class="name-circle-large" id="currentUserAvatar">U</div>
+                <div>
+                    <h2 id="currentUser">用户</h2>
+                    <p><i class="fas fa-circle" style="color: #2ecc71;"></i> 在线</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="searchInput" placeholder="搜索联系人..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px;">
+                <button id="addFriendBtn" style="background: #2ecc71; color: white; border: none; padding: 10px 15px; border-radius: 20px;">
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            </div>
+            
+            <div class="contacts-grid" id="contactsList">
+                <!-- 联系人将在这里显示 -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="window.location.href='/logout'" style="background: #ff4757; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            </div>
+        </div>
+        
+        <!-- 聊天视图 -->
+        <div id="chatView" style="display: none;">
+            <div class="simple-header">
+                <button class="back-button" id="backBtn">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="name-circle-large" id="chatPartnerAvatar">?</div>
+                <div>
+                    <h2 id="chatPartnerName">联系人</h2>
+                    <p id="chatPartnerStatus">状态</p>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <div id="chatMessages" style="min-height: 400px; max-height: 500px; overflow-y: auto; margin-bottom: 20px;">
+                    <!-- 消息将在这里显示 -->
+                </div>
+                
+                <div class="message-input">
+                    <input type="text" id="messageInput" placeholder="输入消息..." disabled>
+                    <button id="sendBtn" disabled>发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 -->
+    <div id="addFriendModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
+            <h3>添加好友</h3>
+            <input type="text" id="friendUsername" placeholder="输入用户名" style="width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="sendFriendRequest()" style="flex: 1; background: #667eea; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">发送请求</button>
+                <button onclick="closeModal()" style="flex: 1; background: #777; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">取消</button>
+            </div>
+            <div id="friendRequestResult" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let currentUser = null;
+        let currentChat = null;
+        let contacts = [];
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadContacts();
+            setupEventListeners();
+            
+            // 每5秒刷新一次
+            setInterval(() => {
+                loadContacts();
+                if (currentChat) {
+                    loadMessages(currentChat);
+                }
+            }, 5000);
+        });
+        
+        // 加载用户信息
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                currentUser = await response.json();
+                
+                // 更新界面
+                document.getElementById('currentUser').textContent = currentUser.display_name || currentUser.username;
+                const firstLetter = (currentUser.display_name || currentUser.username).charAt(0).toUpperCase();
+                document.getElementById('currentUserAvatar').textContent = firstLetter;
+                
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+                window.location.href = '/login';
+            }
+        }
+        
+        // 加载联系人
+        async function loadContacts() {
+            try {
+                const response = await fetch('/api/contacts');
+                if (response.ok) {
+                    contacts = await response.json();
+                    renderContacts();
+                }
+            } catch (error) {
+                console.error('加载联系人失败:', error);
+            }
+        }
+        
+        // 渲染联系人
+        function renderContacts() {
+            const container = document.getElementById('contactsList');
+            if (!container) return;
+            
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            
+            if (contacts.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #777;"><i class="fas fa-user-friends" style="font-size: 40px;"></i><p>暂无联系人</p><p>添加好友开始聊天</p></div>';
+                return;
+            }
+            
+            const filteredContacts = contacts.filter(contact => {
+                const name = (contact.display_name || contact.username).toLowerCase();
+                return name.includes(searchTerm);
+            });
+            
+            container.innerHTML = filteredContacts.map(contact => `
+                <div class="contact-card" onclick="openChat(${contact.id}, '${contact.display_name || contact.username}', ${contact.online})">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div class="name-circle" style="background: ${getColorForId(contact.id)}; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; border-radius: 50%; font-weight: bold;">
+                            ${(contact.display_name || contact.username).charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${contact.display_name || contact.username}</div>
+                            <div style="font-size: 12px; color: ${contact.online ? '#2ecc71' : '#777'}">
+                                ${contact.online ? '在线' : '离线'}
+                            </div>
+                        </div>
+                        ${contact.unread_count > 0 ? 
+                            `<div style="background: #ff4757; color: white; font-size: 12px; padding: 2px 6px; border-radius: 10px;">${contact.unread_count}</div>` : 
+                            ''
+                        }
+                    </div>
+                    <div style="font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${contact.last_message || '暂无消息'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 打开聊天
+        async function openChat(contactId, contactName, isOnline) {
+            currentChat = contactId;
+            
+            // 更新界面
+            document.getElementById('contactsView').style.display = 'none';
+            document.getElementById('chatView').style.display = 'block';
+            
+            document.getElementById('chatPartnerName').textContent = contactName;
+            document.getElementById('chatPartnerStatus').textContent = isOnline ? '在线' : '离线';
+            document.getElementById('chatPartnerStatus').style.color = isOnline ? '#2ecc71' : '#777';
+            
+            const firstLetter = contactName.charAt(0).toUpperCase();
+            document.getElementById('chatPartnerAvatar').textContent = firstLetter;
+            
+            // 启用输入框
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            
+            // 加载消息
+            await loadMessages(contactId);
+            
+            // 聚焦输入框
+            document.getElementById('messageInput').focus();
+        }
+        
+        // 加载消息
+        async function loadMessages(contactId) {
+            try {
+                const response = await fetch(`/api/messages/${contactId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    renderMessages(messages);
+                }
+            } catch (error) {
+                console.error('加载消息失败:', error);
+                showAlert('加载消息失败', 'error');
+            }
+        }
+        
+        // 渲染消息
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            if (messages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #777;"><i class="fas fa-comments" style="font-size: 40px;"></i><p>暂无消息</p><p>开始对话吧！</p></div>';
+                return;
+            }
+            
+            container.innerHTML = messages.map(msg => {
+                const isSent = msg.sender_id === currentUser.id;
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div>${msg.content}</div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">
+                            ${formatTime(msg.timestamp)}
+                            ${isSent ? `<i class="fas fa-check${msg.read ? '-double' : ''}"></i>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // 滚动到底部
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 100);
+        }
+        
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text || !currentChat || !currentUser) return;
+            
+            try {
+                const response = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        receiver_id: currentChat,
+                        content: text
+                    })
+                });
+                
+                if (response.ok) {
+                    input.value = '';
+                    await loadMessages(currentChat);
+                    await loadContacts(); // 更新联系人列表
+                } else {
+                    const error = await response.json();
+                    showAlert('发送失败: ' + error.error, 'error');
+                }
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                showAlert('网络错误', 'error');
+            }
+        }
+        
+        // 好友功能
+        function showAddFriendModal() {
+            document.getElementById('addFriendModal').style.display = 'flex';
+            document.getElementById('friendUsername').focus();
+        }
+        
+        function closeModal() {
+            document.getElementById('addFriendModal').style.display = 'none';
+            document.getElementById('friendUsername').value = '';
+            document.getElementById('friendRequestResult').innerHTML = '';
+        }
+        
+        async function sendFriendRequest() {
+            const username = document.getElementById('friendUsername').value.trim();
+            const resultDiv = document.getElementById('friendRequestResult');
+            
+            if (!username) {
+                resultDiv.innerHTML = '<div style="color: #ff4757;">请输入用户名</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/friends/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = '<div style="color: #2ecc71;">好友请求已发送！</div>';
+                    setTimeout(() => {
+                        closeModal();
+                        loadContacts();
+                    }, 1500);
+                } else {
+                    resultDiv.innerHTML = `<div style="color: #ff4757;">${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('发送好友请求失败:', error);
+                resultDiv.innerHTML = '<div style="color: #ff4757;">网络错误</div>';
+            }
+        }
+        
+        // 设置事件监听
+        function setupEventListeners() {
+            // 返回按钮
+            document.getElementById('backBtn').addEventListener('click', () => {
+                document.getElementById('chatView').style.display = 'none';
+                document.getElementById('contactsView').style.display = 'block';
+                currentChat = null;
+                loadContacts();
+            });
+            
+            // 发送按钮
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            
+            // 输入框回车发送
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // 搜索框
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', renderContacts);
+            }
+            
+            // 添加好友按钮
+            const addFriendBtn = document.getElementById('addFriendBtn');
+            if (addFriendBtn) {
+                addFriendBtn.addEventListener('click', showAddFriendModal);
+            }
+            
+            // 点击模态框外部关闭
+            document.getElementById('addFriendModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        }
+        
+        // 工具函数
+        function getColorForId(id) {
+            const colors = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            ];
+            return colors[id % colors.length];
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (date.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString()) {
+                return '昨天 ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.textContent = message;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 24px;
+                border-radius: 8px;
+                color: white;
+                background: ${type === 'error' ? '#ff4757' : '#2ecc71'};
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+        
+        // 全局函数
+        window.openChat = openChat;
+        window.sendFriendRequest = sendFriendRequest;
+        window.closeModal = closeModal;
+    </script>
+</body>
+</html>
